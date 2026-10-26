@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en-IN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Protein Saathi</title>
+<meta name="description" content="Estimate your daily protein need and record what you eat. All data stays on your phone.">
+<meta name="theme-color" content="#2E7D5B">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-180.png">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="app" aria-live="polite"></div>
+<div id="sheetWrap" class="sheet-wrap" hidden>
+  <div class="sheet-backdrop" data-action="close-sheet"></div>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle" id="sheet"></div>
+</div>
+<div id="toast" class="toast" role="status" hidden></div>
+<noscript>Please enable JavaScript to use Protein Saathi.</noscript>
+<script src="app.js"></script>
+</body>
+</html>
