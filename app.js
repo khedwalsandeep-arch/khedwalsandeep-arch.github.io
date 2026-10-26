@@ -188,7 +188,7 @@ function render() {
 function gateView() {
   return `<main class="page nonav gate">
     <div class="gate-hero">
-      <img class="logo" src="icons/icon-192.png" alt="">
+      <img class="logo" src="icon-192.png" alt="">
       <h1>Welcome to ${APP_NAME}</h1>
       <p>Know how much protein you need each day, and keep a simple record of what you eat.</p>
       <div class="feature-chips"><span>🎯 Daily target</span><span>📝 Meal log</span><span>🔒 Private</span></div>
@@ -353,7 +353,7 @@ function todayView() {
       ${k !== t ? `<button class="btn light sm" data-action="go-today">Back to today</button>` : ""}
     </section>
     ${installPrompt && !ui.installDismissed ? `<section class="install-card">
-      <img src="icons/icon-192.png" alt="">
+      <img src="icon-192.png" alt="">
       <div class="grow"><b>Install Protein Saathi</b><div class="small muted">Open it like an app from your home screen, even offline.</div></div>
       <div class="install-actions"><button class="btn sm" data-action="install">Install</button><button class="link-btn" data-action="install-later">Later</button></div>
     </section>` : ""}
