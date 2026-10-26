@@ -1,5 +1,5 @@
 /* Offline support: caches the app's own files. It never sends your data anywhere. */
-const CACHE = "protein-saathi-v1.0.0";
+const CACHE = "protein-saathi-v1.1.0";
 const FILES = [
   "./", "index.html", "styles.css", "app.js", "manifest.webmanifest", "privacy.html",
   "icons/icon-192.png", "icons/icon-512.png", "icons/maskable-512.png"

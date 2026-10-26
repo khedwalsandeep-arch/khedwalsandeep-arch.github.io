@@ -2,7 +2,7 @@
 "use strict";
 
 const APP_NAME = "Protein Saathi";
-const APP_VERSION = "1.0.0";
+const APP_VERSION = "1.1.0";
 const STORE_KEY = "proteinSaathi.v1";
 
 /* ---------------- Food reference (approximate protein per portion) ---------------- */
@@ -33,10 +33,10 @@ const FOODS = [
 ];
 
 const SLOTS = [
-  { id: "morning", label: "Morning", ico: "\u{1F305}" },
-  { id: "afternoon", label: "Afternoon", ico: "☀️" },
-  { id: "evening", label: "Evening", ico: "\u{1F319}" },
-  { id: "snack", label: "Snacks", ico: "\u{1F95C}" }
+  { id: "morning", label: "Morning", ico: "🌅", hint: "Breakfast" },
+  { id: "afternoon", label: "Afternoon", ico: "☀️", hint: "Lunch" },
+  { id: "evening", label: "Evening", ico: "🌙", hint: "Dinner" },
+  { id: "snack", label: "Snacks", ico: "🥜", hint: "Anytime" }
 ];
 
 const ACT = {
@@ -186,11 +186,12 @@ function render() {
 
 /* ---------------- Disclaimer gate ---------------- */
 function gateView() {
-  return `<main class="page nonav">
+  return `<main class="page nonav gate">
     <div class="gate-hero">
       <img class="logo" src="icons/icon-192.png" alt="">
       <h1>Welcome to ${APP_NAME}</h1>
-      <p class="muted">Estimate how much protein you need each day, and keep a simple daily record of what you eat.</p>
+      <p>Know how much protein you need each day, and keep a simple record of what you eat.</p>
+      <div class="feature-chips"><span>🎯 Daily target</span><span>📝 Meal log</span><span>🔒 Private</span></div>
     </div>
     <section class="disclaimer" aria-labelledby="dtitle">
       <h2 id="dtitle">Important: please read</h2>
@@ -299,11 +300,15 @@ function bindProfileForm(mode) {
 
 /* ---------------- Today ---------------- */
 function ringSVG(pct) {
-  const r = 54, c = 2 * Math.PI * r, off = c * (1 - Math.min(pct, 1));
-  return `<svg viewBox="0 0 132 132" aria-hidden="true">
-    <circle cx="66" cy="66" r="${r}" fill="none" stroke="var(--none)" stroke-width="14"/>
-    <circle class="fg" cx="66" cy="66" r="${r}" fill="none" stroke="${pct >= 1 ? "var(--met)" : "var(--brand)"}" stroke-width="14" stroke-linecap="round" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}"/>
+  const r = 58, c = 2 * Math.PI * r, off = c * (1 - Math.min(pct, 1));
+  return `<svg viewBox="0 0 140 140" aria-hidden="true">
+    <circle cx="70" cy="70" r="${r}" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="13"/>
+    <circle class="fg" cx="70" cy="70" r="${r}" fill="none" stroke="#FFFFFF" stroke-width="13" stroke-linecap="round" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}"/>
   </svg>`;
+}
+function greeting() {
+  const h = new Date().getHours();
+  return h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
 }
 function todayView() {
   const k = ui.day, t = todayKey();
@@ -316,33 +321,43 @@ function todayView() {
   const slots = SLOTS.map(s => {
     const items = log ? log.items.filter(i => i.slot === s.id) : [];
     const sum = items.reduce((a, i) => a + i.total, 0);
-    return `<section class="card">
-      <div class="slot-head"><span class="t"><span class="slot-ico" aria-hidden="true">${s.ico}</span>${s.label}</span>
-        <span class="row"><span class="pill num">${fmtG(sum)} g</span></span></div>
+    return `<section class="slot slot-${s.id}">
+      <div class="slot-row">
+        <span class="slot-ico" aria-hidden="true">${s.ico}</span>
+        <div class="grow"><div class="slot-name">${s.label}</div>
+          <div class="slot-sub">${items.length ? `<b class="num">${fmtG(sum)} g</b> · ${items.length} item${items.length > 1 ? "s" : ""}` : s.hint + " · tap + to add"}</div></div>
+        <button class="add-btn" data-action="open-add" data-slot="${s.id}" aria-label="Add food to ${s.label}">+</button>
+      </div>
       ${items.length ? `<ul class="items">${items.map(i => `<li>
-          <div class="grow"><div class="nm">${esc(i.name)}${i.qty !== 1 ? ` × ${fmtG(i.qty)}` : ""}</div><div class="pt">${esc(i.portion || "")}</div></div>
+          <div class="grow"><div class="nm">${esc(i.name)}${i.qty !== 1 ? ` <span class="x">× ${fmtG(i.qty)}</span>` : ""}</div>${i.portion ? `<div class="pt">${esc(i.portion)}</div>` : ""}</div>
           <span class="g num">${fmtG(i.total)} g</span>
-          <button class="del" data-action="del-item" data-id="${i.id}" aria-label="Remove ${esc(i.name)}">✕</button></li>`).join("")}</ul>`
-        : `<p class="empty">Nothing recorded yet.</p>`}
-      <button class="btn soft sm" data-action="open-add" data-slot="${s.id}">+ Add food</button>
+          <button class="del" data-action="del-item" data-id="${i.id}" aria-label="Remove ${esc(i.name)}">✕</button></li>`).join("")}</ul>` : ""}
     </section>`;
   }).join("");
-  return `<main class="page">
-    <div class="topbar"><span class="brandmark"><img src="icons/icon-192.png" alt="">${APP_NAME}</span></div>
-    <div class="datebar">
-      <button class="icon-btn" data-action="day" data-n="-1" aria-label="Previous day">‹</button>
-      <div class="d">${nd.label}<small>${nd.sub}</small></div>
-      <button class="icon-btn" data-action="day" data-n="1" aria-label="Next day"${k >= t ? " disabled" : ""}>›</button>
-    </div>
-    ${k !== t ? `<button class="btn ghost sm" data-action="go-today">Back to today</button>` : ""}
-    <section class="card ring-card">
-      <div class="ring">${ringSVG(pct)}<div class="center"><span class="big num">${fmtG(total)}</span><span class="of">of ${target} g</span></div></div>
-      <div style="display:flex;flex-direction:column;gap:8px">
-        <h2>${pct >= 1 ? "Target reached" : `${fmtG(left)} g to go`}</h2>
-        <p class="small muted">Aim for about ${res.perMeal} g in each main meal.</p>
-        <span class="pill${pct >= 1 ? "" : " warn"} num" style="align-self:flex-start">${Math.round(pct * 100)}% of target</span>
+  return `<main class="page today">
+    <section class="hero-today">
+      <div class="hello"><span>${k === t ? greeting() : "Viewing a past day"}</span><span class="brand-tag">${APP_NAME}</span></div>
+      <div class="datebar">
+        <button class="round-btn" data-action="day" data-n="-1" aria-label="Previous day">‹</button>
+        <div class="d">${nd.label}<small>${nd.sub}</small></div>
+        <button class="round-btn" data-action="day" data-n="1" aria-label="Next day"${k >= t ? " disabled" : ""}>›</button>
       </div>
+      <div class="ring-wrap">
+        <div class="ring">${ringSVG(pct)}<div class="center"><span class="big num">${fmtG(total)}</span><span class="of">of ${target} g</span></div></div>
+        <div class="ring-side">
+          <div class="status">${pct >= 1 ? "🎉 Target reached!" : `${fmtG(left)} g to go`}</div>
+          <div class="pctbar" aria-hidden="true"><i style="width:${Math.min(100, Math.round(pct * 100))}%"></i></div>
+          <div class="hint">${Math.round(pct * 100)}% done · aim for about <b>${res.perMeal} g</b> per main meal</div>
+        </div>
+      </div>
+      ${k !== t ? `<button class="btn light sm" data-action="go-today">Back to today</button>` : ""}
     </section>
+    ${installPrompt && !ui.installDismissed ? `<section class="install-card">
+      <img src="icons/icon-192.png" alt="">
+      <div class="grow"><b>Install Protein Saathi</b><div class="small muted">Open it like an app from your home screen, even offline.</div></div>
+      <div class="install-actions"><button class="btn sm" data-action="install">Install</button><button class="link-btn" data-action="install-later">Later</button></div>
+    </section>` : ""}
+    <h2 class="section-title">Your meals</h2>
     ${slots}
     <p class="note">${DISCLAIMER_TEXT[0]} Consult a nutritionist and your doctor.</p>
   </main>`;
@@ -471,11 +486,11 @@ function historyView() {
   while (dayTotal(k) > 0 && dayTotal(k) >= dayTarget(k)) { streak++; k = addDays(k, -1); }
   const now = new Date(); const isCurMonth = y === now.getFullYear() && mo === now.getMonth();
   return `<main class="page">
-    <h1>History</h1>
+    <h1 class="page-title">History</h1>
     <div class="stats">
-      <div class="stat"><span class="k">7-day avg</span><span class="v num">${avg} g</span><span class="tiny muted">${logged.length} day${logged.length === 1 ? "" : "s"} logged</span></div>
-      <div class="stat"><span class="k">Streak</span><span class="v num">${streak}</span><span class="tiny muted">days on target</span></div>
-      <div class="stat"><span class="k">This month</span><span class="v num">${metMonth}</span><span class="tiny muted">days on target</span></div>
+      <div class="stat s1"><span class="k">7-day avg</span><span class="v num">${avg} g</span><span class="tiny muted">${logged.length} day${logged.length === 1 ? "" : "s"} logged</span></div>
+      <div class="stat s2"><span class="k">🔥 Streak</span><span class="v num">${streak}</span><span class="tiny muted">days on target</span></div>
+      <div class="stat s3"><span class="k">This month</span><span class="v num">${metMonth}</span><span class="tiny muted">days on target</span></div>
     </div>
     <section class="card">
       <div class="row between"><h2>Last 7 days</h2><span class="tiny muted">Target ${tgNow} g · amber = below</span></div>
@@ -510,9 +525,9 @@ function planView() {
   const p = state.profile, r = compute(p);
   const pref = p.pref || "veg";
   return `<main class="page">
-    <h1>Your plan</h1>
+    <h1 class="page-title">Your plan</h1>
     <section class="hero">
-      <span class="small" style="opacity:.9">Estimated daily protein target</span>
+      <span class="small" style="opacity:.92">🎯 Your estimated daily protein target</span>
       <span class="big num">${r.target}<small>g / day</small></span>
       <span class="small num">${p.ckd ? "Doctor-guided limit" : `Suggested range ${r.gLo}–${r.gHi} g`}</span>
     </section>
@@ -528,26 +543,26 @@ function planView() {
       ${r.capped ? `<p class="tiny muted">Your BMI is above ${r.capBMI}, so protein is worked out on the weight you would have at BMI ${r.capBMI}. Extra body fat does not need extra protein.</p>` : ""}
     </section>
     <section class="card">
-      <h2>Weekly exercise</h2>
+      <h2>💪 Weekly exercise</h2>
       <ul class="steps">${r.exercise.map(([tag, what, how, st]) => `<li><span class="tag">${tag}</span><div>
         <div style="font-weight:700">${what}${st ? ` <span class="pill${st === "Add this" ? " warn" : ""}">${st}</span>` : ""}</div>
         <div class="small muted">${how}</div></div></li>`).join("")}</ul>
       <p class="tiny muted">Based on WHO 2020 guidelines. Check with your doctor or physiotherapist before starting a new programme.</p>
     </section>
     <section class="card">
-      <h2>A sample ${PREF[pref].toLowerCase()} day</h2>
+      <h2>🍽️ A sample ${PREF[pref].toLowerCase()} day</h2>
       <ul class="steps">${SAMPLE[pref].map(([t, what, how, g]) => `<li><span class="tag">${t}</span><div>
         <div style="font-weight:700">${what} <span class="pill">${g}</span></div><div class="small muted">${how}</div></div></li>`).join("")}</ul>
       <p class="tiny muted">Scale portions up or down to reach your target.</p>
     </section>
-    <section class="card">
-      <h2>Protein in common foods</h2>
+    <details class="card fold">
+      <summary><h2>Protein in common foods</h2></summary>
       <table class="tbl"><thead><tr><th>Food</th><th>Portion</th><th>Protein</th></tr></thead>
       <tbody>${foodsFor(pref).map(f => `<tr><td>${f.name}</td><td class="muted">${f.portion}</td><td class="num">~${fmtG(f.p)} g</td></tr>`).join("")}</tbody></table>
       <p class="tiny muted">Approximate values; brands and recipes vary.</p>
-    </section>
-    <section class="card">
-      <h2>How this is estimated</h2>
+    </details>
+    <details class="card fold">
+      <summary><h2>How this is estimated</h2></summary>
       <ul class="tidy small muted">
         <li>Base need for Indian adults: 0.83 g per kg a day (ICMR-NIN 2020); 1.0 g per kg on mainly cereal diets.</li>
         <li>Age 65+: at least 1.0–1.2 g per kg (PROT-AGE).</li>
@@ -564,7 +579,7 @@ function planView() {
         <li><a href="https://www.emro.who.int/health-education/physical-activity/promoting-physical-activity/What-is-the-recommended-amount-of-exerci.html" target="_blank" rel="noopener">WHO physical activity recommendations</a></li>
         <li><a href="https://www.nephjc.com/news/kdigo-ckd-part2" target="_blank" rel="noopener">KDIGO 2024 CKD guideline (summary)</a></li>
       </ol>
-    </section>
+    </details>
     <section class="disclaimer"><h2>Disclaimer</h2>${DISCLAIMER_TEXT.map(t => `<p class="small">${t}</p>`).join("")}</section>
   </main>`;
 }
@@ -573,7 +588,7 @@ function planView() {
 function profileView() {
   const days = Object.keys(state.logs).filter(k => state.logs[k].items.length).length;
   return `<main class="page">
-    <h1>Profile</h1>
+    <h1 class="page-title">Profile</h1>
     <form class="card form" id="pform" novalidate>${profileFields(state.profile)}
       <button class="btn block" type="submit">Save and recalculate</button>
     </form>
@@ -599,6 +614,13 @@ function profileView() {
 function exportData() {
   const json = JSON.stringify(state, null, 1);
   const name = `protein-saathi-backup-${todayKey()}.json`;
+  if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+    const { Filesystem, Share } = window.Capacitor.Plugins;
+    Filesystem.writeFile({ path: name, data: json, directory: "CACHE", encoding: "utf8" })
+      .then((r) => Share.share({ title: "Protein Saathi backup", files: [r.uri] }))
+      .catch((e) => { if (!(e && /cancel/i.test(String(e.message || e)))) toast("Could not create a backup on this device"); });
+    return;
+  }
   try {
     const file = new File([json], name, { type: "application/json" });
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
@@ -681,6 +703,13 @@ document.addEventListener("click", e => {
     case "month": { const m = ui.histMonth; ui.histMonth = new Date(m.getFullYear(), m.getMonth() + +el.dataset.n, 1); render(); break; }
     case "open-day": ui.day = el.dataset.k; ui.tab = "today"; render(); break;
     case "export": exportData(); break;
+    case "install":
+      if (installPrompt) {
+        installPrompt.prompt();
+        installPrompt.userChoice.finally(() => { installPrompt = null; render(); });
+      }
+      break;
+    case "install-later": ui.installDismissed = true; render(); break;
     case "ask-delete": ui.confirmDelete = true; render(); break;
     case "cancel-delete": ui.confirmDelete = false; render(); break;
     case "delete-all":
@@ -702,10 +731,35 @@ document.addEventListener("visibilitychange", () => {
   if (document.visibilityState === "visible" && state.profile && ui.tab === "today" && !ui.sheet) render();
 });
 
+/* ---------------- Install prompt (browser version only) ---------------- */
+let installPrompt = null;
+window.addEventListener("beforeinstallprompt", e => {
+  e.preventDefault();
+  installPrompt = e;
+  if (state.accepted && state.profile && ui.tab === "today" && !ui.sheet) render();
+});
+window.addEventListener("appinstalled", () => { installPrompt = null; toast("Protein Saathi installed"); if (!ui.sheet) render(); });
+
 /* ---------------- Offline support ---------------- */
 // Skipped inside the native Android app (Capacitor), where files are already bundled on the phone.
 if ("serviceWorker" in navigator && !window.Capacitor) {
   window.addEventListener("load", () => { navigator.serviceWorker.register("sw.js").catch(() => {}); });
+}
+
+/* ---------------- Native Android (Capacitor) ---------------- */
+if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+  const { App, Browser } = window.Capacitor.Plugins;
+  // Back button: close the Add food panel, otherwise leave the app.
+  App.addListener("backButton", () => {
+    if (ui.sheet) closeSheet();
+    else if (ui.tab && ui.tab !== "today") { ui.tab = "today"; render(); }
+    else App.exitApp();
+  });
+  // Source links open in the phone's browser.
+  document.addEventListener("click", (e) => {
+    const a = e.target.closest && e.target.closest('a[href^="http"]');
+    if (a) { e.preventDefault(); Browser.open({ url: a.href }); }
+  });
 }
 
 render();
