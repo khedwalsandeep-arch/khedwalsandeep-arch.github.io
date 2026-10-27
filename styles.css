@@ -99,6 +99,8 @@ input:focus,select:focus{border-color:var(--brand);outline:none;background:#fff}
 .ring svg{width:100%;height:100%;transform:rotate(-90deg)}
 .ring .center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
 .ring .big{font-size:2.3rem;font-weight:900;line-height:1}
+.ring .big.sm{font-size:1.9rem}
+.ring .big.xs{font-size:1.55rem}
 .ring .of{font-size:.85rem;opacity:.9;font-weight:600}
 .ring-side{display:flex;flex-direction:column;gap:10px}
 .ring-side .status{font-size:1.35rem;font-weight:900;line-height:1.15}

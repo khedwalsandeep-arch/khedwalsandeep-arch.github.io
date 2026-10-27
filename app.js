@@ -343,7 +343,7 @@ function todayView() {
         <button class="round-btn" data-action="day" data-n="1" aria-label="Next day"${k >= t ? " disabled" : ""}>›</button>
       </div>
       <div class="ring-wrap">
-        <div class="ring">${ringSVG(pct)}<div class="center"><span class="big num">${fmtG(total)}</span><span class="of">of ${target} g</span></div></div>
+        <div class="ring">${ringSVG(pct)}<div class="center"><span class="big num${fmtG(total).length > 5 ? " xs" : fmtG(total).length > 3 ? " sm" : ""}">${fmtG(total)}</span><span class="of">of ${target} g</span></div></div>
         <div class="ring-side">
           <div class="status">${pct >= 1 ? "🎉 Target reached!" : `${fmtG(left)} g to go`}</div>
           <div class="pctbar" aria-hidden="true"><i style="width:${Math.min(100, Math.round(pct * 100))}%"></i></div>
